@@ -1,6 +1,8 @@
 import React, {useState} from "react";
 import { StyleSheet, Text, View, Dimensions } from "react-native";
 import CheckBox from 'expo-checkbox';
+import { getDatabase, ref, child, get } from "firebase/database";
+import { fireDB } from "../firebaseConfig";
 
 function Home(){
     let day = new Date();
@@ -12,6 +14,13 @@ function Home(){
     if (toggleBagel)calories+=380;
     if (toggleBurrito)calories+=420;
 
+    const db = fireDB;
+    const starCountRef = ref(db, '/0/' + day.getDate());
+    onValue(starCountRef, (snapshot) => {
+        const data = snapshot.val();
+        updateStarCount(postElement, data);
+    });
+    
     return (
         <View style ={styles.mainContainer}>
             <View style ={styles.container}>
