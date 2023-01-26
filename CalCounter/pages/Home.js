@@ -1,9 +1,14 @@
 import React, {useState} from "react";
 import { StyleSheet, Text, View, Dimensions } from "react-native";
 import CheckBox from 'expo-checkbox';
-import { getDatabase, ref, child, get } from "firebase/database";
-import { fireDB } from "../firebaseConfig";
+import { getDatabase, ref, child, get, set, onValue } from "firebase/database";
+import { fireDB, db } from "../firebaseConfig";
 
+function writeUserData(day, calories) {
+    set(ref(db, `${day.getMonth()}/${day.getDate()}`), {
+      calories: calories
+    });
+  }
 function Home(){
     let day = new Date();
     let weekday = day.getDay();
@@ -14,11 +19,17 @@ function Home(){
     if (toggleBagel)calories+=380;
     if (toggleBurrito)calories+=420;
 
-    const db = fireDB;
-    const starCountRef = ref(db, '/0/' + day.getDate());
-    onValue(starCountRef, (snapshot) => {
-        const data = snapshot.val();
-        updateStarCount(postElement, data);
+    writeUserData(day, calories);
+
+    const dbRef = ref(db);
+    get(child(dbRef, `${day.getMonth()}`)).then((snapshot) => {
+    if (snapshot.exists()) {
+        console.log(snapshot.val());
+    } else {
+        console.log("No Data Available");
+    }
+    }).catch((error) => {
+        console.error(error);
     });
     
     return (

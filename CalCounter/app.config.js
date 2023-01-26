@@ -1,5 +1,5 @@
-import Constants from 'expo-constants'
-export default{
+import 'dotenv/config';
+export default {
   "expo": {
     "name": "CalCounter",
     "slug": "CalCounter",
