@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Home from './pages/Home';
 import Header from './components/Header';
 import Footer from './components/Footer';
