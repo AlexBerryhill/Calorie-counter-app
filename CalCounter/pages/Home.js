@@ -4,13 +4,13 @@ import CheckBox from 'expo-checkbox';
 import { getDatabase, ref, child, get, set, onValue } from "firebase/database";
 import { fireDB, db } from "../firebaseConfig";
 import {LineChart} from "react-native-chart-kit";
-import * as firebase from 'firebase/app';
-import 'firebase/database';
+import * as firebase from 'firebase/compat/app';
+import 'firebase/compat/database';
 import Constants from 'expo-constants';
 
 function writeUserData(day, calories) {
-    set(ref(db, `${day.getMonth()}/${day.getDate()}`), {
-      calories: calories
+    set(db.ref(`${day.getMonth()}/${day.getDate()}`), {
+      calories: calories/1000
     });
 }
 
@@ -34,40 +34,10 @@ function Home(){
     let day = new Date();
     let weekday = day.getDay();
     const [data, setData] = useState({})
+    const [labels, setLabels] = useState([])
     const [toggleBagel, setToggleBagel] = useState(false)
     const [toggleBurrito, setToggleBurrito] = useState(false)
     let calories = 0;
-    // let data = [
-    //     Math.random() * 100,
-    //     Math.random() * 100,
-    //     Math.random() * 100,
-    //     Math.random() * 100,
-    //     Math.random() * 100,
-    //     Math.random() * 100,
-    //   ];
-    let label=[];
-    // const lineChartRef = useRef(null);
-    // const editText = useCallback(() => {
-    //     console.log("data")
-    //     lineChartRef.current.setNativeProps({yAxisLabel:'f'}
-    //     );
-    //   }, []);
-
-    //         cont dbRef = ref(db);
-    //         get(child(dbRef, `${day.getMonth()}`)).then((snapshot) => {
-    //         if (snapshot.exists()) {
-    //             // console.log(snapshot.val());
-                
-    //             data=_toList(snapshot.val());
-    //             editText();
-    //             console.log(data)
-    //         } else {
-    //             console.log("No Data Available");
-    //         }
-    //         }).catch((error) => {
-    //             console.error(error);
-    //         });
-    s
 
     if (toggleBagel)calories+=380;
     if (toggleBurrito)calories+=420;
@@ -76,22 +46,10 @@ function Home(){
     
     
     useEffect(() => {
-        // const firebaseConfig = {
-        //     apiKey: Constants.expoConfig.extra.apiKey,
-        //     authDomain: Constants.expoConfig.extra.authDomain,
-        //     projectId: Constants.expoConfig.extra.projectID,
-        //     storageBucket: Constants.expoConfig.extra.storageBucket,
-        //     messagingSenderId: Constants.expoConfig.extra.messagingSenderId,
-        //     appId: Constants.expoConfig.extra.appId,
-        //     measurementId: Constants.expoConfig.extra.measurementId
-        // };
-        // const app =firebase.initializeApp(firebaseConfig);
-
-        const databaseRef = firebase.database().ref('data/'+day.getDate());        
-        // const databaseRef = ref(db);
+        const databaseRef = db.ref('/0');        
         databaseRef.once('value').then((snapshot) => {
             console.log(snapshot.val());
-            setData(snapshot.val());
+            setData(_toList(snapshot.val()));
         });
       }, []);
 
@@ -107,21 +65,13 @@ function Home(){
                         labels: ["January", "February", "March", "April", "May", "June", "July"],
                         datasets: [
                             {
-                                data: [
-                                    Math.random() * 100,
-                                    Math.random() * 100,
-                                    Math.random() * 100,
-                                    Math.random() * 100,
-                                    Math.random() * 100,
-                                    Math.random() * 100,
-                                  ]
+                                data: data
                             }
                         ]
                     }}
                     width={Dimensions.get("window").width-60} // from react-native
                     height={220}
-                    yAxisLabel="$"
-                    yAxisSuffix="k"
+                    yAxisSuffix="cal"
                     yAxisInterval={1} // optional, defaults to 1
                     chartConfig={{
                     backgroundColor: "#353535",
