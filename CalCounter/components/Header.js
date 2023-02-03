@@ -15,7 +15,7 @@ const window = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     header: {
-        height: 80,
+        height: 70,
         width: window.width,
         top: 0,
         left: 0,

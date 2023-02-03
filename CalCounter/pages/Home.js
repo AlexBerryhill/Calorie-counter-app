@@ -1,68 +1,69 @@
-import React, {useState, useCallback, useRef, useEffect} from "react";
-import { StyleSheet, Text, View, Dimensions } from "react-native";
+import React, {useState, useEffect} from "react";
+import { StyleSheet, Text, View, Dimensions, ScrollView } from "react-native";
 import CheckBox from 'expo-checkbox';
-import { getDatabase, ref, child, get, set, onValue } from "firebase/database";
-import { fireDB, db } from "../firebaseConfig";
+import { set } from "firebase/database";
+import { db } from "../firebaseConfig";
 import {LineChart} from "react-native-chart-kit";
-import * as firebase from 'firebase/compat/app';
 import 'firebase/compat/database';
-import Constants from 'expo-constants';
 
 function writeUserData(day, calories) {
     set(db.ref(`${day.getMonth()}/${day.getDate()}`), {
-      calories: calories/1000
+      Kcalories: calories/1000
     });
 }
 
-function _toList(obj){
+function toList(obj){
     if(obj === undefined) return [];
-    return toList(obj, []);
+    return _toList(obj, []);
 }
 
-function toList(obj, data){
-    if(Object.keys(obj).length == 0){
-        return data;
-    }
+function _toList(obj, data){
     let day = Object.keys(obj)[0];
     // label.push(day);
     data.push(obj[day].calories);
     delete obj[day];
-    return toList(obj, data)
+    if(Object.keys(obj).length == 0){
+        return data;
+    }
+    return _toList(obj, data)
 }
 
 function Home(){
     let day = new Date();
     let weekday = day.getDay();
-    const [data, setData] = useState({})
-    const [labels, setLabels] = useState([])
+    const [data, setData] = useState([1])
+    const [labels, setLabels] = useState([1])
     const [toggleBagel, setToggleBagel] = useState(false)
     const [toggleBurrito, setToggleBurrito] = useState(false)
+    const [toggleHotDog, setToggleHotDog] = useState(false)
+    const [toggleSpaghetti, setToggleSpaghetti] = useState(false)
     let calories = 0;
 
     if (toggleBagel)calories+=380;
     if (toggleBurrito)calories+=420;
+    if (toggleHotDog)calories+=420;
+    if (toggleSpaghetti)calories+=485;
     
     writeUserData(day, calories);
-    
     
     useEffect(() => {
         const databaseRef = db.ref('/0');        
         databaseRef.once('value').then((snapshot) => {
             console.log(snapshot.val());
-            setData(_toList(snapshot.val()));
+            setData(toList(snapshot.val()));
+            setLabels(Object.keys(snapshot.val()));
         });
       }, []);
 
-    console.log(data)
     return (
-        <View style ={styles.mainContainer}>
+        <ScrollView style ={styles.mainContainer}>
             <View style ={styles.container}>
                 <Text style={styles.title}>
-                    This will be a graph
+                    Kilo-Calories over time
                 </Text>
                 <LineChart
                     data={{
-                        labels: ["January", "February", "March", "April", "May", "June", "July"],
+                        labels: labels,
                         datasets: [
                             {
                                 data: data
@@ -71,7 +72,7 @@ function Home(){
                     }}
                     width={Dimensions.get("window").width-60} // from react-native
                     height={220}
-                    yAxisSuffix="cal"
+                    yAxisSuffix="Kcal"
                     yAxisInterval={1} // optional, defaults to 1
                     chartConfig={{
                     backgroundColor: "#353535",
@@ -161,8 +162,28 @@ function Home(){
                         Burrito
                     </Text>
                 </View>
+                <View style ={styles.rowContainer}>
+                    <CheckBox
+                        disabled={false}
+                        value={toggleHotDog}
+                        onValueChange={(newValue) => setToggleHotDog(newValue)}
+                    />
+                    <Text style ={styles.selection}>
+                        Hot Dogs
+                    </Text>
+                </View>
+                <View style ={styles.rowContainer}>
+                    <CheckBox
+                        disabled={false}
+                        value={toggleSpaghetti}
+                        onValueChange={(newValue) => setToggleSpaghetti(newValue)}
+                    />
+                    <Text style ={styles.selection}>
+                        Spaghetti
+                    </Text>
+                </View>
             </View>
-        </View>
+        </ScrollView>
     );
 }
 
@@ -173,8 +194,8 @@ const styles = StyleSheet.create({
         flex: 1,
         width: window.width,
         height: window.height,
-        alignItems: 'center',
-        justifyContent: 'center',
+        // alignItems: 'center',
+        // justifyContent: 'center',
         backgroundColor: 'black',
     },
     container: {
