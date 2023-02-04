@@ -6,7 +6,6 @@ import { db } from "../firebaseConfig";
 import { LineChart } from "react-native-chart-kit";
 import 'firebase/compat/database';
 
-
 // Write the user data to the Firebase database
 function writeUserData(day, calories) {
     // Set the reference to the month and date in the Firebase database
@@ -14,7 +13,6 @@ function writeUserData(day, calories) {
       Kcalories: calories/1000 // Divide the calories by 1000 to get kilo-calories
     });
 }
-
 
 // Convert an object to a list
 function toList(obj){
@@ -56,7 +54,7 @@ function Home(){
     // Use the useEffect hook to fetch the data from the Firebase database
     useEffect(() => {
         // Reference to the '0' node in the database
-        const databaseRef = db.ref('/0');    
+        const databaseRef = db.ref('/'+day.getMonth());    
         // Retrieve the value of the node once    
         databaseRef.once('value').then((snapshot) => {
             // Update the state with the data from the database

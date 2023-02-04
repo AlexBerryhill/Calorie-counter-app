@@ -6,7 +6,7 @@ This is a code written in React Native which implements a calorie tracking app. 
 
 I wrote this because I wanted to track the calories of what I have beed eating.
 
-[Software Demo Video](http://youtube.link.goes.here)
+[Software Demo Video](https://youtu.be/tE4NYzsRtnM)
 
 # Development Environment
 
