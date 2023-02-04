@@ -3,61 +3,72 @@ import { StyleSheet, Text, View, Dimensions, ScrollView } from "react-native";
 import CheckBox from 'expo-checkbox';
 import { set } from "firebase/database";
 import { db } from "../firebaseConfig";
-import {LineChart} from "react-native-chart-kit";
+import { LineChart } from "react-native-chart-kit";
 import 'firebase/compat/database';
 
+
+// Write the user data to the Firebase database
 function writeUserData(day, calories) {
+    // Set the reference to the month and date in the Firebase database
     set(db.ref(`${day.getMonth()}/${day.getDate()}`), {
-      Kcalories: calories/1000
+      Kcalories: calories/1000 // Divide the calories by 1000 to get kilo-calories
     });
 }
 
+
+// Convert an object to a list
 function toList(obj){
-    if(obj === undefined) return [];
+    if(obj === undefined) return []; // If the object is undefined, return an empty list
     return _toList(obj, []);
 }
 
+// Recursive helper function for converting an object to a list
 function _toList(obj, data){
-    let day = Object.keys(obj)[0];
-    // label.push(day);
-    data.push(obj[day].calories);
-    delete obj[day];
-    if(Object.keys(obj).length == 0){
-        return data;
+    let day = Object.keys(obj)[0]; // Get the key for the first element of the object
+    data.push(obj[day].calories); // Push the calories into the data list
+    delete obj[day]; // Delete the first element from the object
+    if(Object.keys(obj).length == 0){ // If the object is empty
+        return data; // Return the data list
     }
-    return _toList(obj, data)
+    return _toList(obj, data) // Recursively call the function with the updated object
 }
 
 function Home(){
-    let day = new Date();
-    let weekday = day.getDay();
-    const [data, setData] = useState([1])
-    const [labels, setLabels] = useState([1])
-    const [toggleBagel, setToggleBagel] = useState(false)
-    const [toggleBurrito, setToggleBurrito] = useState(false)
-    const [toggleHotDog, setToggleHotDog] = useState(false)
-    const [toggleSpaghetti, setToggleSpaghetti] = useState(false)
-    let calories = 0;
+    let day = new Date(); // Get the current date
+    let weekday = day.getDay(); // Get the weekday
+    const [data, setData] = useState([1]) // State to store the data for the line chart
+    const [labels, setLabels] = useState([1]) // State to store the labels for the line chart
+    const [toggleBagel, setToggleBagel] = useState(false) // State to keep track of whether the bagel checkbox is checked
+    const [toggleBurrito, setToggleBurrito] = useState(false) // State to keep track of whether the burrito checkbox is checked
+    const [toggleHotDog, setToggleHotDog] = useState(false) // State to keep track of whether the hot dog checkbox is checked
+    const [toggleSpaghetti, setToggleSpaghetti] = useState(false) // State to keep track of whether the spaghetti checkbox is checked
+    let calories = 0; // Keep track of the total calories
 
+    // Add the calories for each checked food item
     if (toggleBagel)calories+=380;
     if (toggleBurrito)calories+=420;
     if (toggleHotDog)calories+=420;
     if (toggleSpaghetti)calories+=485;
     
+    // Write the user data to the Firebase database
     writeUserData(day, calories);
     
+    // Use the useEffect hook to fetch the data from the Firebase database
     useEffect(() => {
-        const databaseRef = db.ref('/0');        
+        // Reference to the '0' node in the database
+        const databaseRef = db.ref('/0');    
+        // Retrieve the value of the node once    
         databaseRef.once('value').then((snapshot) => {
-            console.log(snapshot.val());
+            // Update the state with the data from the database
             setData(toList(snapshot.val()));
             setLabels(Object.keys(snapshot.val()));
         });
-      }, []);
+    }, []); // Pass an empty array as the second argument to run this effect only once when the component mounts
 
     return (
         <ScrollView style ={styles.mainContainer}>
             <View style ={styles.container}>
+                {/* Display the Kilo-Calories over time */}
                 <Text style={styles.title}>
                     Kilo-Calories over time
                 </Text>
@@ -98,6 +109,7 @@ function Home(){
                 />
             </View>
             <View style ={styles.container}>
+                {/* Display the weekdays */}
                 <Text style={styles.title}>
                     Weekday
                 </Text>
@@ -139,8 +151,9 @@ function Home(){
                 </View>
             </View>
             <View style ={styles.container}>
+                {/* Display the checkboxes for food items */}
                 <Text style={styles.title}>
-                    Meals
+                    Today's Intake
                 </Text>
                 <View style ={styles.rowContainer}>
                     <CheckBox
@@ -149,7 +162,7 @@ function Home(){
                         onValueChange={(newValue) => setToggleBagel(newValue)}
                     />
                     <Text style ={styles.selection}>
-                        Bagel
+                        Bagel with cream cheese
                     </Text>
                 </View>
                 <View style ={styles.rowContainer}>
@@ -194,8 +207,6 @@ const styles = StyleSheet.create({
         flex: 1,
         width: window.width,
         height: window.height,
-        // alignItems: 'center',
-        // justifyContent: 'center',
         backgroundColor: 'black',
     },
     container: {
