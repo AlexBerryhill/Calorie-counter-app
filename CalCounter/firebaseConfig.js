@@ -1,5 +1,6 @@
 // Import the functions you need from the SDKs you need
 import firebase from 'firebase/compat/app';
+import "firebase/compat/firestore"
 import 'firebase/compat/auth';
 import 'firebase/compat/database';
 // TODO: Add SDKs for Firebase products that you want to use
@@ -26,10 +27,14 @@ if (firebase.apps.length === 0) {
 } else {
   app = firebase.app();
 }
+
+const auth = firebase.auth();
+
+// app = firebase.initializeApp(firestoreConfig)
+
 // Initialize Firebase Authentication and get a reference to the service
 // const analytics = getAnalytics(app);
 
-const db = app.database();
-const auth = firebase.auth();
+const db = firebase.firestore();
 
 export { db, auth };

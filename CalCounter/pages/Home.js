@@ -2,33 +2,45 @@ import React, {useState, useEffect} from "react";
 import { StyleSheet, Text, View, Dimensions, ScrollView } from "react-native";
 import CheckBox from 'expo-checkbox';
 import { set } from "firebase/database";
-import { db } from "../firebaseConfig";
+import { db, auth } from "../firebaseConfig";
 import { LineChart } from "react-native-chart-kit";
 import 'firebase/compat/database';
 
-// Write the user data to the Firebase database
-function writeUserData(day, calories) {
-    // Set the reference to the month and date in the Firebase database
-    set(db.ref(`${day.getMonth()}/${day.getDate()}`), {
-      Kcalories: calories/1000 // Divide the calories by 1000 to get kilo-calories
+async function writeUserData(day, calories){
+    var userId=auth.currentUser.email;
+    const docRef = db.collection('users').doc(userId).collection(String(day.getFullYear())).doc(String(day.getMonth())).collection('Days').doc(String(day.getDate()));
+
+    await docRef.set({
+        Kcal: calories/1000,
+        day: day.getDate()
     });
+}
+
+async function getUserData(day){
+    var userId=auth.currentUser.email;
+    const snapshot = await db.collection('users').doc(userId).collection(String(day.getFullYear())).doc(String(day.getMonth())).collection('Days').get();
+    const userMonthData = snapshot.docs.map(doc => {
+        return { day: doc.id, ...doc.data() }
+    });
+    return userMonthData;
 }
 
 // Convert an object to a list
 function toList(obj){
     if(obj === undefined) return []; // If the object is undefined, return an empty list
-    return _toList(obj, []);
+    return _toList(obj, [], []);
 }
 
 // Recursive helper function for converting an object to a list
-function _toList(obj, data){
-    let day = Object.keys(obj)[0]; // Get the key for the first element of the object
-    data.push(obj[day].calories); // Push the calories into the data list
-    delete obj[day]; // Delete the first element from the object
-    if(Object.keys(obj).length == 0){ // If the object is empty
-        return data; // Return the data list
+function _toList(arr, data, labels){
+    
+    data.push(arr[0].Kcal); // Push the calories into the data list
+    labels.push(arr[0].day)
+    arr.shift(); // Delete the first element from the object
+    if(arr.length===0){ // If the object is empty
+        return [data, labels]; // Return the data list
     }
-    return _toList(obj, data) // Recursively call the function with the updated object
+    return _toList(arr, data, labels) // Recursively call the function with the updated object
 }
 
 function Home(){
@@ -37,30 +49,38 @@ function Home(){
     const [data, setData] = useState([1]) // State to store the data for the line chart
     const [labels, setLabels] = useState([1]) // State to store the labels for the line chart
     const [toggleBagel, setToggleBagel] = useState(false) // State to keep track of whether the bagel checkbox is checked
+    const [toggleCereal, setToggleCereal] = useState(false) // State to keep track of whether the bagel checkbox is checked
     const [toggleBurrito, setToggleBurrito] = useState(false) // State to keep track of whether the burrito checkbox is checked
     const [toggleHotDog, setToggleHotDog] = useState(false) // State to keep track of whether the hot dog checkbox is checked
     const [toggleSpaghetti, setToggleSpaghetti] = useState(false) // State to keep track of whether the spaghetti checkbox is checked
+    const [toggleMacNCheese, setToggleMacNCheese] = useState(false) // State to keep track of whether the spaghetti checkbox is checked
     let calories = 0; // Keep track of the total calories
 
     // Add the calories for each checked food item
     if (toggleBagel)calories+=380;
+    if (toggleCereal)calories+=540;
     if (toggleBurrito)calories+=420;
     if (toggleHotDog)calories+=420;
     if (toggleSpaghetti)calories+=485;
+    if (toggleMacNCheese)calories+=1200;
     
     // Write the user data to the Firebase database
     writeUserData(day, calories);
     
     // Use the useEffect hook to fetch the data from the Firebase database
     useEffect(() => {
-        // Reference to the '0' node in the database
-        const databaseRef = db.ref('/'+day.getMonth());    
-        // Retrieve the value of the node once    
-        databaseRef.once('value').then((snapshot) => {
-            // Update the state with the data from the database
-            setData(toList(snapshot.val()));
-            setLabels(Object.keys(snapshot.val()));
-        });
+        var myData, myLabels
+        const userData=getUserData(day).then(
+            (value) => {
+                [myData, myLabels]= toList(value);
+                setData(myData);
+                setLabels(myLabels);
+                return value;
+            },
+            (err) => {
+                console.log(err);
+            }
+        );         
     }, []); // Pass an empty array as the second argument to run this effect only once when the component mounts
 
     return (
@@ -151,7 +171,7 @@ function Home(){
             <View style ={styles.container}>
                 {/* Display the checkboxes for food items */}
                 <Text style={styles.title}>
-                    Today's Intake
+                    Breakfast
                 </Text>
                 <View style ={styles.rowContainer}>
                     <CheckBox
@@ -163,6 +183,22 @@ function Home(){
                         Bagel with cream cheese
                     </Text>
                 </View>
+                <View style ={styles.rowContainer}>
+                    <CheckBox
+                        disabled={false}
+                        value={toggleCereal}
+                        onValueChange={(newValue) => setToggleCereal(newValue)}
+                    />
+                    <Text style ={styles.selection}>
+                        Cinnomon Toast Crunch
+                    </Text>
+                </View>
+            </View>
+            <View style ={styles.container}>
+                {/* Display the checkboxes for food items */}
+                <Text style={styles.title}>
+                    Lunch
+                </Text>
                 <View style ={styles.rowContainer}>
                     <CheckBox
                         disabled={false}
@@ -183,6 +219,12 @@ function Home(){
                         Hot Dogs
                     </Text>
                 </View>
+            </View>
+            <View style ={styles.container}>
+                {/* Display the checkboxes for food items */}
+                <Text style={styles.title}>
+                    Dinner
+                </Text>
                 <View style ={styles.rowContainer}>
                     <CheckBox
                         disabled={false}
@@ -191,6 +233,16 @@ function Home(){
                     />
                     <Text style ={styles.selection}>
                         Spaghetti
+                    </Text>
+                </View>
+                <View style ={styles.rowContainer}>
+                    <CheckBox
+                        disabled={false}
+                        value={toggleMacNCheese}
+                        onValueChange={(newValue) => setToggleMacNCheese(newValue)}
+                    />
+                    <Text style ={styles.selection}>
+                        Mac N' Cheese
                     </Text>
                 </View>
             </View>
